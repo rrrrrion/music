@@ -138,6 +138,16 @@
     @media(max-width:1070px) { .player { grid-template-columns:minmax(150px,1fr) minmax(300px,1.6fr) 110px; gap:12px; padding-left:18px; padding-right:18px; } .player-extras .volume { width:60px; } .hero-vinyl { right:-53px; opacity:.64; } }
     @media(max-width:720px) { .app { display:block; min-height:100dvh; height:auto; padding-bottom:190px; } .sidebar { padding:19px 16px 12px; border:0; overflow:visible; display:block; } .brand { margin:0 0 19px; font-size:22px; } .brand-logo { width:32px; height:32px; border-radius:10px; } .brand-logo .icon { height:20px; width:20px; } .side-heading { margin:0 0 10px; } .sidebar-playlists { display:flex; gap:7px; overflow-x:auto; padding-bottom:3px; } .playlist-link { width:auto; min-width:112px; white-space:nowrap; padding:9px 12px; } .create-playlist { display:inline-flex; margin:10px 0 0; padding:8px 13px; } .side-bottom { display:none; } .main { overflow:visible; padding:14px 16px 35px; } .topbar { margin-bottom:17px; } .hero { padding:25px 22px; min-height:180px; margin-bottom:25px; } .hero h1 { font-size:29px; } .hero-vinyl { height:200px; width:200px; right:-89px; top:-9px; opacity:.35; } .vinyl-sticker { width:75px; height:75px; } .section-title-row { align-items:flex-start; } .playlist-title { font-size:21px; } .track-head { grid-template-columns:22px minmax(0,1fr) 108px; padding:12px 10px; } .track-head span:nth-child(3) { display:none; } .track-row { grid-template-columns:22px minmax(0,1fr) 108px; gap:6px; padding:10px 9px; } .track-size { display:none; } .track-tools { gap:0; } .track-thumb { height:35px; width:35px; } .track-name { font-size:12px; } .icon-btn { width:26px; height:29px; } .player { position:fixed; bottom:0; left:0; right:0; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:6px; padding:12px 17px max(16px,env(safe-area-inset-bottom)); min-height:160px; box-shadow:0 -16px 55px #0007; } .now-playing { grid-column:1; grid-row:1; } .now-art { width:41px; height:41px; } .now-title { font-size:12px; } .player-extras { grid-column:2; grid-row:1; } .player-extras .volume, .player-extras > .icon { display:none; } .player-center { grid-column:1/-1; grid-row:2; } .transport { gap:22px; margin-bottom:12px; } .toast { bottom:171px; } }
     @media(max-width:390px) { .hero h1 { font-size:25px; } .small-action { height:34px; min-width:34px; padding:0 8px; } .main { padding-left:10px; padding-right:10px; } .track-thumb { width:30px; height:30px; } .track-row,.track-head { grid-template-columns:17px minmax(0,1fr) 104px; } }
+
+    .library-safety { padding:15px 12px; margin:19px 2px 8px; background:#152134; border:1px solid #31465f; border-radius:14px; }
+    .safety-title { color:#d4e5fb; font-size:12px; font-weight:850; margin-bottom:8px; }
+    .safety-note { color:#a6b8d2; font-size:11px; line-height:1.7; margin:0 0 12px; }
+    .safety-status { color:#caffad; font-size:11px; line-height:1.7; margin-bottom:9px; }
+    .safety-btn { background:#233651; border:1px solid #466078; border-radius:9px; color:#ecf4ff; font-size:12px; font-weight:700; padding:9px 7px; width:100%; margin:4px 0; text-align:center; }
+    .safety-btn:hover:not(:disabled) { background:#2f4b63; border-color:#bcfc82; }
+    .safety-btn.backup { background:#c7fca1; color:#1e3019; border-color:#c7fca1; }
+    .safety-btn.backup:hover:not(:disabled) { background:#ddffbf; }
+    @media(max-width:720px) { .library-safety { margin-top:15px; padding:13px; } .safety-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; } .safety-actions .safety-btn { margin:0; } }
     @media(prefers-reduced-motion:reduce) { *, *::before, *::after { scroll-behavior:auto!important; animation-duration:.01ms!important; transition-duration:.01ms!important; } }
   </style>
 </head>
@@ -170,6 +180,17 @@
     <p class="side-heading">YOUR LIBRARY</p>
     <nav id="playlistNav" class="sidebar-playlists" aria-label="作成したプレイリスト"></nav>
     <button id="createPlaylistBtn" class="create-playlist" type="button"><svg class="icon"><use href="#i-plus"/></svg>新しいプレイリスト</button>
+    <div class="library-safety" aria-label="保存とバックアップ">
+      <div class="safety-title">保存とバックアップ</div>
+      <div id="storageNotice" class="safety-status">保存状態を確認しています…</div>
+      <p class="safety-note">ファイルはこの端末のブラウザ内に残ります。消失に備えて、曲・動画・名前・プレイリストをまとめたZIPを保存してください。</p>
+      <div class="safety-actions">
+        <button id="persistBtn" class="safety-btn" type="button">保存を保護する</button>
+        <button id="downloadBackupBtn" class="safety-btn backup" type="button">ZIPバックアップ</button>
+        <button id="restoreBackupBtn" class="safety-btn" type="button">ZIPから復元</button>
+      </div>
+      <input id="backupFileInput" class="sr-only" type="file" accept=".zip,application/zip">
+    </div>
     <div class="side-bottom">
       <div class="storage-stats"><strong>MY MEDIA</strong><span id="libraryStats">0 ファイルを保存中</span></div>
       <div class="privacy"><svg class="icon"><use href="#i-lock"/></svg><span>音楽・動画はこのブラウザ内に保存。外部サーバーには送信しません。</span></div>
@@ -233,6 +254,7 @@
   let toastTimer;
   let dialogMode = 'new';
   let editingTrackId = null;
+  let backupBusy = false;
 
   const safeText = s => String(s ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
   const formatSize = n => n >= 1024 * 1024 ? `${(n / 1048576).toFixed(1)} MB` : `${(n / 1024).toFixed(0)} KB`;
@@ -278,6 +300,226 @@
   const getAll = store => databaseAction(store,'getAll');
   const setSetting = (key,value) => put('settings',{key,value});
   function getSetting(settings, key, fallback) { return settings.find(s => s.key === key)?.value ?? fallback; }
+
+  // ブラウザの IndexedDB は自動で保存されますが、データ削除や端末故障には備えが必要です。
+  async function updateStorageNotice() {
+    const notice = $('storageNotice');
+    try {
+      const capable = !!(navigator.storage && navigator.storage.persist && navigator.storage.persisted);
+      const persisted = capable && await navigator.storage.persisted();
+      let usage = '';
+      if (navigator.storage?.estimate) {
+        const result = await navigator.storage.estimate();
+        if (result.usage != null) usage = `／使用量 約${formatSize(result.usage)}`;
+      }
+      notice.textContent = persisted ? `保存の保護：有効${usage}` : capable ? `保存の保護：未有効${usage}` : `ブラウザ内に保存中${usage}`;
+      $('persistBtn').textContent = persisted ? '保存保護は有効です' : capable ? '保存を保護する' : 'このブラウザでは保護非対応';
+      $('persistBtn').disabled = persisted || !capable;
+    } catch(e) {
+      notice.textContent = 'ブラウザ内に保存中（保護状態は不明）';
+    }
+  }
+  async function enablePersistentStorage() {
+    if (!navigator.storage?.persist) return;
+    try {
+      const allowed = await navigator.storage.persist();
+      await updateStorageNotice();
+      notify(allowed ? '保存保護が有効になりました。念のためZIPも保存してください。' : 'ブラウザが保存保護を許可しませんでした。ZIPバックアップを利用してください。',!allowed);
+    } catch(e) { notify('保存保護を利用できません。ZIPバックアップを使ってください。',true); }
+  }
+
+  // 依存ライブラリ不要のZIP（圧縮なし）。MP3/MP4は元から圧縮済みなので再圧縮はしません。
+  const zipEncoder = new TextEncoder();
+  const zipDecoder = new TextDecoder('utf-8');
+  const crcTable = (() => {
+    const tbl = new Uint32Array(256);
+    for (let n=0; n<256; n++) {
+      let c=n;
+      for (let k=0; k<8; k++) c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+      tbl[n] = c >>> 0;
+    }
+    return tbl;
+  })();
+  async function zipCrc(blob) {
+    let crc = 0xffffffff;
+    for (let pos=0; pos<blob.size; pos+=1024*1024) {
+      const chunk = new Uint8Array(await blob.slice(pos,pos+1024*1024).arrayBuffer());
+      for (let j=0; j<chunk.length; j++) crc = crcTable[(crc ^ chunk[j]) & 255] ^ (crc >>> 8);
+    }
+    return (crc ^ 0xffffffff) >>> 0;
+  }
+  async function makeZip(entries) {
+    const parts = [], central = [];
+    let offset = 0, centralSize = 0;
+    if (entries.length > 65535) throw new Error('ZIPに保存できるファイル数を超えました。');
+    for (const entry of entries) {
+      const name = zipEncoder.encode(entry.name);
+      const blob = entry.blob;
+      if (blob.size > 0xffffffff || offset + blob.size + name.length + 30 > 0xffffffff) {
+        throw new Error('ZIPが4GBを超えるため、まとめて保存できません。小分けのバックアップをご利用ください。');
+      }
+      const crc = await zipCrc(blob);
+      const head = new Uint8Array(30+name.length);
+      const h = new DataView(head.buffer);
+      h.setUint32(0,0x04034b50,true);
+      h.setUint16(4,20,true);
+      h.setUint16(6,0x0800,true);
+      h.setUint16(8,0,true);
+      h.setUint16(12,0x0021,true);
+      h.setUint32(14,crc,true);
+      h.setUint32(18,blob.size,true);
+      h.setUint32(22,blob.size,true);
+      h.setUint16(26,name.length,true);
+      head.set(name,30);
+      parts.push(head,blob);
+      const cbuf = new Uint8Array(46+name.length);
+      const c = new DataView(cbuf.buffer);
+      c.setUint32(0,0x02014b50,true);
+      c.setUint16(4,20,true);
+      c.setUint16(6,20,true);
+      c.setUint16(8,0x0800,true);
+      c.setUint16(14,0x0021,true);
+      c.setUint32(16,crc,true);
+      c.setUint32(20,blob.size,true);
+      c.setUint32(24,blob.size,true);
+      c.setUint16(28,name.length,true);
+      c.setUint32(42,offset,true);
+      cbuf.set(name,46);
+      central.push(cbuf);
+      centralSize += cbuf.length;
+      offset += head.length + blob.size;
+    }
+    if (offset + centralSize + 22 > 0xffffffff) throw new Error('ZIPのサイズが大きすぎます。');
+    const end = new Uint8Array(22), v = new DataView(end.buffer);
+    v.setUint32(0,0x06054b50,true);
+    v.setUint16(8,entries.length,true);
+    v.setUint16(10,entries.length,true);
+    v.setUint32(12,centralSize,true);
+    v.setUint32(16,offset,true);
+    return new Blob([...parts,...central,end],{type:'application/zip'});
+  }
+  async function zipFileEntries(file) {
+    const tailStart = Math.max(0,file.size-65557);
+    const tail = new DataView(await file.slice(tailStart).arrayBuffer());
+    let end = -1;
+    for (let i=tail.byteLength-22; i>=0; i--) {
+      if (tail.getUint32(i,true) === 0x06054b50) { end=i; break; }
+    }
+    if (end<0) throw new Error('有効なZIPファイルではありません。');
+    const count = tail.getUint16(end+10,true);
+    const size = tail.getUint32(end+12,true);
+    const offset = tail.getUint32(end+16,true);
+    if (size>20*1024*1024 || offset+size>file.size) throw new Error('ZIPの一覧を読み込めません。');
+    const bytes = new Uint8Array(await file.slice(offset,offset+size).arrayBuffer());
+    const view = new DataView(bytes.buffer);
+    const entries = new Map();
+    let pos=0;
+    for (let i=0; i<count; i++) {
+      if (pos+46>bytes.length || view.getUint32(pos,true)!==0x02014b50) throw new Error('ZIPのファイル一覧が壊れています。');
+      const flags=view.getUint16(pos+8,true), method=view.getUint16(pos+10,true);
+      const compressed=view.getUint32(pos+20,true), uncompressed=view.getUint32(pos+24,true);
+      const len=view.getUint16(pos+28,true), extra=view.getUint16(pos+30,true), comment=view.getUint16(pos+32,true);
+      const localOffset=view.getUint32(pos+42,true);
+      if (pos+46+len+extra+comment>bytes.length || method!==0 || compressed!==uncompressed || (flags & 1)) {
+        throw new Error('このバックアップのZIP形式には対応していません。');
+      }
+      const name=zipDecoder.decode(bytes.subarray(pos+46,pos+46+len));
+      entries.set(name,{offset:localOffset,size:compressed});
+      pos+=46+len+extra+comment;
+    }
+    async function extract(name) {
+      const entry=entries.get(name);
+      if (!entry) throw new Error(`バックアップに${name}がありません。`);
+      const header = new DataView(await file.slice(entry.offset,entry.offset+30).arrayBuffer());
+      if (header.byteLength<30 || header.getUint32(0,true)!==0x04034b50) throw new Error('ZIPのデータが壊れています。');
+      const start=entry.offset+30+header.getUint16(26,true)+header.getUint16(28,true);
+      if (start+entry.size>file.size) throw new Error('ZIPのファイルが途中で切れています。');
+      return file.slice(start,start+entry.size);
+    }
+    return {entries,extract};
+  }
+  function setBackupBusy(busy) {
+    backupBusy = busy;
+    for (const id of ['downloadBackupBtn','restoreBackupBtn']) $(id).disabled = busy;
+  }
+  async function downloadBackup() {
+    if (backupBusy) return;
+    setBackupBusy(true);
+    $('downloadBackupBtn').textContent = 'ZIPを作成中…';
+    try {
+      const allTracks = [...tracks.values()];
+      const records = allTracks.map(t => {
+        const {blob,...metadata}=t;
+        const extension = String(t.format||'bin').toLowerCase().replace(/[^a-z0-9]/g,'') || 'bin';
+        return {...metadata,zipPath:`media/${t.id}.${extension}`};
+      });
+      const manifest = {app:'looply',version:1,exportedAt:new Date().toISOString(),activePlaylistId,playlists,tracks:records};
+      const entries = [{name:'manifest.json',blob:new Blob([JSON.stringify(manifest)],{type:'application/json'})},
+        ...allTracks.map((t,i)=>({name:records[i].zipPath,blob:t.blob}))];
+      const archive = await makeZip(entries);
+      const url = URL.createObjectURL(archive);
+      const link = document.createElement('a');
+      link.href=url;
+      link.download=`looply-backup-${new Date().toISOString().slice(0,10)}.zip`;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),60000);
+      notify(`バックアップをダウンロードしました（${allTracks.length}ファイル）。大切に保管してください。`);
+    } catch(e) { console.error(e); notify(e.message||'バックアップの作成に失敗しました。',true); }
+    finally { setBackupBusy(false); $('downloadBackupBtn').textContent='ZIPバックアップ'; }
+  }
+  async function restoreBackup(file) {
+    if (!file || backupBusy) return;
+    setBackupBusy(true);
+    $('restoreBackupBtn').textContent='復元中…';
+    let restored=0;
+    try {
+      const zip = await zipFileEntries(file);
+      const manifestBlob = await zip.extract('manifest.json');
+      if (manifestBlob.size > 20*1024*1024) throw new Error('バックアップの情報量が多すぎます。');
+      const data = JSON.parse(await manifestBlob.text());
+      if (data.app!=='looply' || data.version!==1 || !Array.isArray(data.tracks) || !Array.isArray(data.playlists)) {
+        throw new Error('Looplyのバックアップではありません。');
+      }
+      const incoming = data.tracks.filter(t => t && typeof t.id === 'string' && !tracks.has(t.id));
+      if (!confirm(`このZIPから曲・動画${incoming.length}件とプレイリストを復元します。\n今ある曲は消さずに追加します。続けますか？`)) return;
+      for (const t of incoming) {
+        if (typeof t.zipPath !== 'string' || !t.zipPath.startsWith('media/')) throw new Error('バックアップ内のファイル情報が不正です。');
+        const blob=await zip.extract(t.zipPath);
+        const rec={id:t.id,name:String(t.name||t.originalName||'名前なし'),note:String(t.note||''),originalName:String(t.originalName||''),size:blob.size,format:String(t.format||''),kind:t.kind==='video'?'video':'audio',lastModified:Number(t.lastModified)||Date.now(),blob};
+        await put('tracks',rec);
+        tracks.set(rec.id,rec);
+        restored++;
+      }
+      for (const entry of data.playlists) {
+        if (!entry || typeof entry.id!=='string' || !Array.isArray(entry.trackIds)) continue;
+        const validIds = entry.trackIds.filter(id => tracks.has(id));
+        const existing=playlists.find(p=>p.id===entry.id);
+        if (existing) {
+          existing.trackIds=[...new Set([...existing.trackIds,...validIds])];
+          await put('playlists',existing);
+        } else {
+          const rec={id:entry.id,name:String(entry.name||'復元したプレイリスト'),createdAt:Number(entry.createdAt)||Date.now(),trackIds:[...new Set(validIds)]};
+          await put('playlists',rec);
+          playlists.push(rec);
+        }
+      }
+      const preferredId = playlists.some(p => p.id === data.activePlaylistId) ? data.activePlaylistId :
+        data.playlists.find(p => playlists.some(saved => saved.id === p.id && saved.trackIds.length))?.id;
+      if (preferredId) await activatePlaylist(preferredId);
+      else { navRender(); listRender(); updateTransport(); }
+      await updateStorageNotice();
+      notify(`${restored}ファイルを復元しました。プレイリストも追加しました。`);
+    } catch(e) {
+      console.error(e);
+      navRender(); listRender();
+      notify(`${e.message||'復元に失敗しました。'}${restored ? `（${restored}件は保存済みです）`:''}`,true);
+    } finally {
+      setBackupBusy(false);
+      $('restoreBackupBtn').textContent='ZIPから復元';
+    }
+  }
 
   function navRender() {
     $('playlistNav').innerHTML = playlists.map(p => `<button type="button" class="playlist-link ${p.id === activePlaylistId ? 'active' : ''}" data-playlist="${safeText(p.id)}" title="${safeText(p.name)}">${icons('list')}<span>${safeText(p.name)}</span></button>`).join('');
@@ -426,7 +668,8 @@
     $('uploadTopBtn').disabled = false;
     if (activePlaylistId === target.id && !activeTrackId && count) loadTrack(target.trackIds[0]);
     navRender(); listRender();
-    if (count) notify(`${count} ファイルをプレイリストに追加しました！`);
+    updateStorageNotice();
+    if (count) notify(`${count} ファイルを保存しました。大切なファイルはZIPバックアップも取ってください。`);
     if (valid.length !== files.length) notify(`${count} ファイルを追加しました（音声・動画以外は除外）`);
   }
   function nextSong(isAuto = false) {
@@ -531,6 +774,10 @@
     } catch(e) { notify('削除に失敗しました',true); }
   }
   function bindEvents() {
+    $('persistBtn').addEventListener('click',enablePersistentStorage);
+    $('downloadBackupBtn').addEventListener('click',downloadBackup);
+    $('restoreBackupBtn').addEventListener('click',()=>$('backupFileInput').click());
+    $('backupFileInput').addEventListener('change',async e=>{ const selected=e.target.files?.[0]; e.target.value=''; if(selected) await restoreBackup(selected); });
     $('createPlaylistBtn').addEventListener('click',()=>openDialog('new'));
     $('renamePlaylistBtn').addEventListener('click',()=>openDialog('edit'));
     $('deletePlaylistBtn').addEventListener('click',deletePlaylist);
@@ -629,6 +876,7 @@
       const storedId = getSetting(settings,'activePlaylistId',playlists[0].id);
       await activatePlaylist(playlists.some(p=>p.id===storedId) ? storedId : playlists[0].id);
       updateTransport();
+      await updateStorageNotice();
     } catch(e) {
       console.error(e);
       notify('この環境では曲を保存できません。ChromeやEdgeで開いてください。',true);
