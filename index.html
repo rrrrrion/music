@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b101b">
-  <meta name="description" content="音楽ファイルをブラウザに保存して、好きなプレイリストを作ってリピート再生できる無料プレイヤー。">
-  <title>Looply — マイ・ミュージックプレイヤー</title>
+  <meta name="description" content="音楽・MP4動画をブラウザに保存して、プレイリスト・リピート再生を楽しめる無料プレイヤー。">
+  <title>Looply — 音楽・動画プレイヤー</title>
   <style>
     :root { color-scheme: dark; --bg:#090e18; --panel:#101827; --panel-2:#172235; --panel-3:#1b2940; --muted:#9ba9c2; --text:#f1f6ff; --line:#263247; --accent:#bcfc82; --accent-dark:#1c3220; --danger:#ff8d9a; --shadow:0 12px 44px #0004; }
     * { box-sizing:border-box; }
@@ -58,9 +58,15 @@
     .search-area > .icon { position:absolute; left:16px; top:50%; transform:translateY(-50%); color:#8d9cb4; }
     .search-area input { background:#111c2c; border:1px solid #26364a; border-radius:12px; width:100%; color:var(--text); padding:13px 14px 13px 46px; font-size:13px; }
     .search-area input::placeholder { color:#7789a4; }
+    .video-stage { margin:0 0 30px; border:1px solid #314d48; background:#111b29; border-radius:18px; overflow:hidden; box-shadow:var(--shadow); }
+    .video-stage[hidden] { display:none; }
+    .video-heading { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; padding:14px 18px; }
+    .video-heading strong { font-size:13px; color:var(--accent); }
+    .video-heading span { font-size:11px; color:var(--muted); }
+    .video-stage video { display:block; width:100%; max-height:min(65vh,680px); aspect-ratio:16/9; background:#000; object-fit:contain; }
     .track-panel { background:#101827; border:1px solid #263347; border-radius:17px; overflow:hidden; }
-    .track-head { padding:14px 18px; display:grid; grid-template-columns:33px minmax(0,1fr) 100px 118px; gap:12px; align-items:center; border-bottom:1px solid #253347; color:#8395ae; font-size:11px; font-weight:750; letter-spacing:.6px; }
-    .track-row { padding:11px 18px; display:grid; grid-template-columns:33px minmax(0,1fr) 100px 118px; gap:12px; align-items:center; border-bottom:1px solid #1e2a3c; transition:background .13s ease; }
+    .track-head { padding:14px 18px; display:grid; grid-template-columns:33px minmax(0,1fr) 100px 146px; gap:12px; align-items:center; border-bottom:1px solid #253347; color:#8395ae; font-size:11px; font-weight:750; letter-spacing:.6px; }
+    .track-row { padding:11px 18px; display:grid; grid-template-columns:33px minmax(0,1fr) 100px 146px; gap:12px; align-items:center; border-bottom:1px solid #1e2a3c; transition:background .13s ease; }
     .track-row:last-child { border-bottom:0; }
     .track-row:hover { background:#172236; }
     .track-row.is-active { background:#1b2d30; }
@@ -121,21 +127,24 @@
     dialog h2 { margin:0 0 7px; font-size:20px; }
     dialog p { font-size:12px; color:#a9b8cf; line-height:1.6; }
     dialog label { display:block; margin:23px 0 8px; font-weight:700; font-size:12px; }
-    dialog input { width:100%; padding:13px; background:#0e1827; border:1px solid #465770; border-radius:10px; color:var(--text); font-size:14px; }
+    dialog input, dialog textarea { width:100%; padding:13px; background:#0e1827; border:1px solid #465770; border-radius:10px; color:var(--text); font-size:14px; }
+    dialog textarea { min-height:85px; resize:vertical; font:inherit; }
+    .original-name { overflow-wrap:anywhere; }
     dialog .dialog-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:22px; }
     .secondary-btn { border:1px solid #44566f; background:transparent; color:#d4deeb; border-radius:10px; padding:11px 16px; font-size:12px; font-weight:750; }
     .toast { position:fixed; bottom:137px; left:50%; transform:translate(-50%,12px); background:#dcffb3; color:#1d3020; border-radius:11px; font-weight:800; font-size:12px; padding:12px 19px; box-shadow:0 12px 35px #0005; opacity:0; transition:opacity .18s,transform .18s; pointer-events:none; z-index:100; max-width:90vw; text-align:center; }
     .toast.visible { opacity:1; transform:translate(-50%,0); }
     .toast.error { background:#ffc2cb; color:#572028; }
     @media(max-width:1070px) { .player { grid-template-columns:minmax(150px,1fr) minmax(300px,1.6fr) 110px; gap:12px; padding-left:18px; padding-right:18px; } .player-extras .volume { width:60px; } .hero-vinyl { right:-53px; opacity:.64; } }
-    @media(max-width:720px) { .app { display:block; min-height:100dvh; height:auto; padding-bottom:190px; } .sidebar { padding:19px 16px 12px; border:0; overflow:visible; display:block; } .brand { margin:0 0 19px; font-size:22px; } .brand-logo { width:32px; height:32px; border-radius:10px; } .brand-logo .icon { height:20px; width:20px; } .side-heading { margin:0 0 10px; } .sidebar-playlists { display:flex; gap:7px; overflow-x:auto; padding-bottom:3px; } .playlist-link { width:auto; min-width:112px; white-space:nowrap; padding:9px 12px; } .create-playlist { display:inline-flex; margin:10px 0 0; padding:8px 13px; } .side-bottom { display:none; } .main { overflow:visible; padding:14px 16px 35px; } .topbar { margin-bottom:17px; } .hero { padding:25px 22px; min-height:180px; margin-bottom:25px; } .hero h1 { font-size:29px; } .hero-vinyl { height:200px; width:200px; right:-89px; top:-9px; opacity:.35; } .vinyl-sticker { width:75px; height:75px; } .section-title-row { align-items:flex-start; } .playlist-title { font-size:21px; } .track-head { grid-template-columns:22px minmax(0,1fr) 80px; padding:12px 10px; } .track-head span:nth-child(3) { display:none; } .track-row { grid-template-columns:22px minmax(0,1fr) 80px; gap:6px; padding:10px 9px; } .track-size { display:none; } .track-tools { gap:0; } .track-thumb { height:35px; width:35px; } .track-name { font-size:12px; } .icon-btn { width:26px; height:29px; } .player { position:fixed; bottom:0; left:0; right:0; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:6px; padding:12px 17px max(16px,env(safe-area-inset-bottom)); min-height:160px; box-shadow:0 -16px 55px #0007; } .now-playing { grid-column:1; grid-row:1; } .now-art { width:41px; height:41px; } .now-title { font-size:12px; } .player-extras { grid-column:2; grid-row:1; } .player-extras .volume, .player-extras > .icon { display:none; } .player-center { grid-column:1/-1; grid-row:2; } .transport { gap:22px; margin-bottom:12px; } .toast { bottom:171px; } }
-    @media(max-width:390px) { .hero h1 { font-size:25px; } .small-action { height:34px; min-width:34px; padding:0 8px; } .main { padding-left:10px; padding-right:10px; } .track-thumb { width:30px; height:30px; } .track-row,.track-head { grid-template-columns:17px minmax(0,1fr) 77px; } }
+    @media(max-width:720px) { .app { display:block; min-height:100dvh; height:auto; padding-bottom:190px; } .sidebar { padding:19px 16px 12px; border:0; overflow:visible; display:block; } .brand { margin:0 0 19px; font-size:22px; } .brand-logo { width:32px; height:32px; border-radius:10px; } .brand-logo .icon { height:20px; width:20px; } .side-heading { margin:0 0 10px; } .sidebar-playlists { display:flex; gap:7px; overflow-x:auto; padding-bottom:3px; } .playlist-link { width:auto; min-width:112px; white-space:nowrap; padding:9px 12px; } .create-playlist { display:inline-flex; margin:10px 0 0; padding:8px 13px; } .side-bottom { display:none; } .main { overflow:visible; padding:14px 16px 35px; } .topbar { margin-bottom:17px; } .hero { padding:25px 22px; min-height:180px; margin-bottom:25px; } .hero h1 { font-size:29px; } .hero-vinyl { height:200px; width:200px; right:-89px; top:-9px; opacity:.35; } .vinyl-sticker { width:75px; height:75px; } .section-title-row { align-items:flex-start; } .playlist-title { font-size:21px; } .track-head { grid-template-columns:22px minmax(0,1fr) 108px; padding:12px 10px; } .track-head span:nth-child(3) { display:none; } .track-row { grid-template-columns:22px minmax(0,1fr) 108px; gap:6px; padding:10px 9px; } .track-size { display:none; } .track-tools { gap:0; } .track-thumb { height:35px; width:35px; } .track-name { font-size:12px; } .icon-btn { width:26px; height:29px; } .player { position:fixed; bottom:0; left:0; right:0; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:6px; padding:12px 17px max(16px,env(safe-area-inset-bottom)); min-height:160px; box-shadow:0 -16px 55px #0007; } .now-playing { grid-column:1; grid-row:1; } .now-art { width:41px; height:41px; } .now-title { font-size:12px; } .player-extras { grid-column:2; grid-row:1; } .player-extras .volume, .player-extras > .icon { display:none; } .player-center { grid-column:1/-1; grid-row:2; } .transport { gap:22px; margin-bottom:12px; } .toast { bottom:171px; } }
+    @media(max-width:390px) { .hero h1 { font-size:25px; } .small-action { height:34px; min-width:34px; padding:0 8px; } .main { padding-left:10px; padding-right:10px; } .track-thumb { width:30px; height:30px; } .track-row,.track-head { grid-template-columns:17px minmax(0,1fr) 104px; } }
     @media(prefers-reduced-motion:reduce) { *, *::before, *::after { scroll-behavior:auto!important; animation-duration:.01ms!important; transition-duration:.01ms!important; } }
   </style>
 </head>
 <body>
 <!-- Icons are embedded so the site works without external services. -->
 <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-video" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="m10 8 6 4-6 4V8Z"/></symbol>
   <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></symbol>
   <symbol id="i-loop" viewBox="0 0 24 24"><path d="M7 7h10a4 4 0 0 1 4 4v1M17 3l4 4-4 4M17 17H7a4 4 0 0 1-4-4v-1M7 21l-4-4 4-4"/></symbol>
   <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
@@ -162,28 +171,41 @@
     <nav id="playlistNav" class="sidebar-playlists" aria-label="作成したプレイリスト"></nav>
     <button id="createPlaylistBtn" class="create-playlist" type="button"><svg class="icon"><use href="#i-plus"/></svg>新しいプレイリスト</button>
     <div class="side-bottom">
-      <div class="storage-stats"><strong>MY MUSIC</strong><span id="libraryStats">0 曲を保存中</span></div>
-      <div class="privacy"><svg class="icon"><use href="#i-lock"/></svg><span>音楽データはこのブラウザ内に保存。外部サーバーには送信しません。</span></div>
+      <div class="storage-stats"><strong>MY MEDIA</strong><span id="libraryStats">0 ファイルを保存中</span></div>
+      <div class="privacy"><svg class="icon"><use href="#i-lock"/></svg><span>音楽・動画はこのブラウザ内に保存。外部サーバーには送信しません。</span></div>
     </div>
   </aside>
   <main class="main">
-    <div class="topbar"><div><div class="eyebrow">YOUR MUSIC, YOUR WAY</div><div class="label" style="margin-top:7px">好きな曲を、好きなだけ。</div></div><button type="button" id="uploadTopBtn" class="primary-btn"><svg class="icon"><use href="#i-upload"/></svg>曲を追加</button></div>
-    <section class="hero"><div class="hero-content"><div class="hero-tag">♪ NEVER STOP THE MUSIC</div><h1>聴きたい音楽を、<br>ずっとリピート。</h1><p>手持ちの音楽ファイルからプレイリストを作って、シャッフル・連続再生・1曲リピートを自由に楽しもう。</p></div><div class="hero-vinyl" aria-hidden="true"><div class="vinyl-sticker">LOOPLY</div></div></section>
-    <section aria-label="楽曲リスト">
-      <div class="section-title-row"><div><h2 id="playlistTitle" class="playlist-title">お気に入り</h2><p id="playlistCaption" class="playlist-desc">0 曲のプレイリスト</p></div><div class="section-actions"><button id="renamePlaylistBtn" type="button" class="small-action" title="名前を変更" aria-label="プレイリスト名を変更"><svg class="icon"><use href="#i-edit"/></svg></button><button id="deletePlaylistBtn" type="button" class="small-action danger" title="プレイリストを削除" aria-label="プレイリストを削除"><svg class="icon"><use href="#i-trash"/></svg></button></div></div>
-      <label class="search-area"><span class="sr-only">曲を検索</span><svg class="icon"><use href="#i-search"/></svg><input id="searchTracks" type="search" placeholder="プレイリスト内の曲を検索..." autocomplete="off"></label>
+    <div class="topbar"><div><div class="eyebrow">YOUR MUSIC, YOUR WAY</div><div class="label" style="margin-top:7px">好きな音楽も動画も、好きなだけ。</div></div><button type="button" id="uploadTopBtn" class="primary-btn"><svg class="icon"><use href="#i-upload"/></svg>ファイルを追加</button></div>
+    <section class="hero"><div class="hero-content"><div class="hero-tag">♪ NEVER STOP THE MUSIC</div><h1>好きな音楽も動画も、<br>ずっとリピート。</h1><p>MP3・MP4などの手持ちのファイルでプレイリストを作成。音楽も動画もリピート・シャッフルで楽しもう。</p></div><div class="hero-vinyl" aria-hidden="true"><div class="vinyl-sticker">LOOPLY</div></div></section>
+    <section id="videoStage" class="video-stage" aria-label="動画再生画面" hidden><div class="video-heading"><strong>NOW WATCHING · 動画プレイヤー</strong><span>動画内のボタンで全画面表示もできます</span></div><video id="videoScreen" controls playsinline preload="metadata" aria-label="選択中の動画"></video></section>
+    <section aria-label="音楽・動画ファイルリスト">
+      <div class="section-title-row"><div><h2 id="playlistTitle" class="playlist-title">お気に入り</h2><p id="playlistCaption" class="playlist-desc">0 ファイルのプレイリスト</p></div><div class="section-actions"><button id="renamePlaylistBtn" type="button" class="small-action" title="名前を変更" aria-label="プレイリスト名を変更"><svg class="icon"><use href="#i-edit"/></svg></button><button id="deletePlaylistBtn" type="button" class="small-action danger" title="プレイリストを削除" aria-label="プレイリストを削除"><svg class="icon"><use href="#i-trash"/></svg></button></div></div>
+      <label class="search-area"><span class="sr-only">曲を検索</span><svg class="icon"><use href="#i-search"/></svg><input id="searchTracks" type="search" placeholder="プレイリスト内の音楽・動画を検索..." autocomplete="off"></label>
       <div class="track-panel"><div class="track-head"><span>#</span><span>タイトル</span><span>サイズ</span><span style="text-align:right">操作</span></div><div id="trackList"></div></div>
-      <div class="drop-zone" id="dropZone" role="button" tabindex="0" aria-label="音楽ファイルを選ぶ、またはドラッグ&ドロップ"><svg class="icon"><use href="#i-upload"/></svg><span>ここに音楽ファイルをドラッグ＆ドロップ、またはクリックして追加</span></div>
-      <input id="fileInput" class="sr-only" type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.opus,.flac,.aac,.weba" multiple>
+      <div class="drop-zone" id="dropZone" role="button" tabindex="0" aria-label="音楽・動画ファイルを選ぶ、またはドラッグ&ドロップ"><svg class="icon"><use href="#i-upload"/></svg><span>ここにMP3・MP4などのファイルをドラッグ＆ドロップ、またはクリックして追加</span></div>
+      <input id="fileInput" class="sr-only" type="file" accept="audio/*,video/*,.mp3,.m4a,.wav,.ogg,.opus,.flac,.aac,.weba,.mp4,.m4v,.webm,.mov,.ogv" multiple>
     </section>
   </main>
-  <footer class="player" aria-label="音楽プレイヤー">
-    <div class="now-playing"><div class="now-art"><svg class="icon"><use href="#i-music"/></svg></div><div class="now-text"><div class="now-label">NOW PLAYING</div><div id="nowTitle" class="now-title">曲が選択されていません</div><div id="nowSubtitle" class="now-sub">ファイルを追加して再生しよう</div></div></div>
+  <footer class="player" aria-label="音楽・動画プレイヤー">
+    <div class="now-playing"><div class="now-art"><svg class="icon"><use id="nowArtIcon" href="#i-music"/></svg></div><div class="now-text"><div class="now-label">NOW PLAYING</div><div id="nowTitle" class="now-title">曲が選択されていません</div><div id="nowSubtitle" class="now-sub">音楽や動画を追加して再生しよう</div></div></div>
     <div class="player-center"><div class="transport"><button id="shuffleBtn" title="シャッフルオフ" aria-label="シャッフル切り替え"><svg class="icon"><use href="#i-shuffle"/></svg></button><button id="previousBtn" title="前の曲" aria-label="前の曲"><svg class="icon"><use href="#i-prev"/></svg></button><button id="playBtn" class="play-pause" title="再生" aria-label="再生"><svg class="icon"><use id="playIcon" href="#i-play"/></svg></button><button id="nextBtn" title="次の曲" aria-label="次の曲"><svg class="icon"><use href="#i-next"/></svg></button><button id="repeatBtn" class="selected" title="全曲リピート" aria-label="リピートモード: 全曲リピート"><svg class="icon"><use href="#i-loop"/></svg><span id="repeatOneIndicator" class="repeat-one" hidden>1</span></button></div><div class="progress-row"><time id="currentTime">0:00</time><input id="seekBar" type="range" min="0" max="1000" value="0" aria-label="再生位置" step="1"><time id="durationTime">0:00</time></div></div>
     <div class="player-extras"><svg class="icon"><use href="#i-volume"/></svg><input id="volumeBar" class="volume" type="range" min="0" max="100" value="80" aria-label="音量"><button id="speedBtn" class="speed-btn" aria-label="再生速度を変更" title="再生速度">1.0×</button></div>
   </footer>
 </div>
-<dialog id="playlistDialog" aria-labelledby="dialogTitle"><form id="playlistForm"><h2 id="dialogTitle">新しいプレイリスト</h2><p>好きな名前をつけて、音楽をまとめましょう。</p><label for="playlistNameInput">プレイリストの名前</label><input id="playlistNameInput" maxlength="50" required placeholder="例：作業用 BGM" autocomplete="off"><div class="dialog-actions"><button type="button" id="cancelDialogBtn" class="secondary-btn">キャンセル</button><button type="submit" id="savePlaylistBtn" class="primary-btn">保存する</button></div></form></dialog>
+<dialog id="playlistDialog" aria-labelledby="dialogTitle"><form id="playlistForm"><h2 id="dialogTitle">新しいプレイリスト</h2><p>好きな名前をつけて、音楽や動画をまとめましょう。</p><label for="playlistNameInput">プレイリストの名前</label><input id="playlistNameInput" maxlength="50" required placeholder="例：作業用 BGM" autocomplete="off"><div class="dialog-actions"><button type="button" id="cancelDialogBtn" class="secondary-btn">キャンセル</button><button type="submit" id="savePlaylistBtn" class="primary-btn">保存する</button></div></form></dialog>
+<dialog id="trackDialog" aria-labelledby="trackDialogTitle">
+  <form id="trackForm">
+    <h2 id="trackDialogTitle">曲・動画の名前を変更</h2>
+    <p>ファイルの中身はそのままに、表示名とメモを保存できます。</p>
+    <p class="original-name" id="trackOriginalName"></p>
+    <label for="trackNameInput">表示する名前（必須）</label>
+    <input id="trackNameInput" type="text" maxlength="100" required autocomplete="off" placeholder="例：お気に入りの曲・ライブ映像">
+    <label for="trackMemoInput">曲のメモ（任意）</label>
+    <textarea id="trackMemoInput" maxlength="200" placeholder="例：落ち着いた曲・作業用・サビがお気に入り"></textarea>
+    <div class="dialog-actions"><button type="button" id="cancelTrackDialogBtn" class="secondary-btn">キャンセル</button><button type="submit" id="saveTrackBtn" class="primary-btn">保存する</button></div>
+  </form>
+</dialog>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <script>
 'use strict';
@@ -193,6 +215,9 @@
   const audio = new Audio();
   audio.preload = 'metadata';
   audio.volume = 0.8;
+  const video = $('videoScreen');
+  video.volume = 0.8;
+  let media = audio;
   let db;
   let playlists = [];
   let tracks = new Map();
@@ -207,12 +232,14 @@
   let seekActive = false;
   let toastTimer;
   let dialogMode = 'new';
+  let editingTrackId = null;
 
   const safeText = s => String(s ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
   const formatSize = n => n >= 1024 * 1024 ? `${(n / 1048576).toFixed(1)} MB` : `${(n / 1024).toFixed(0)} KB`;
   const formatTime = t => Number.isFinite(t) && t >= 0 ? `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2,'0')}` : '0:00';
   const genId = () => (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const currentPlaylist = () => playlists.find(p => p.id === activePlaylistId);
+  const isVideoTrack = t => t?.kind === 'video' || (!t?.kind && /^(MP4|M4V|WEBM|MOV|OGV)$/.test(t?.format || ''));
 
   function notify(message, isError=false) {
     const el = $('toast');
@@ -256,19 +283,19 @@
     $('playlistNav').innerHTML = playlists.map(p => `<button type="button" class="playlist-link ${p.id === activePlaylistId ? 'active' : ''}" data-playlist="${safeText(p.id)}" title="${safeText(p.name)}">${icons('list')}<span>${safeText(p.name)}</span></button>`).join('');
     $('playlistNav').querySelectorAll('[data-playlist]').forEach(btn => btn.addEventListener('click', () => activatePlaylist(btn.dataset.playlist)));
     const uniqueTrackIds = new Set(playlists.flatMap(p => p.trackIds));
-    $('libraryStats').textContent = `${uniqueTrackIds.size} 曲を保存中`;
+    $('libraryStats').textContent = `${uniqueTrackIds.size} ファイルを保存中`;
   }
   function listRender() {
     const playlist = currentPlaylist();
     if (!playlist) return;
     $('playlistTitle').textContent = playlist.name;
     const ids = playlist.trackIds.filter(id => tracks.has(id));
-    $('playlistCaption').textContent = `${ids.length} 曲のプレイリスト`;
+    $('playlistCaption').textContent = `${ids.length} ファイルのプレイリスト`;
     $('deletePlaylistBtn').disabled = playlists.length < 2;
     const term = $('searchTracks').value.trim().toLocaleLowerCase();
-    const filtered = ids.filter(id => tracks.get(id).name.toLocaleLowerCase().includes(term));
+    const filtered = ids.filter(id => [tracks.get(id).name,tracks.get(id).note || ''].some(value => value.toLocaleLowerCase().includes(term)));
     if (!filtered.length) {
-      $('trackList').innerHTML = `<div class="empty"><div class="empty-graphic">${icons(term ? 'search' : 'music')}</div><h3>${term ? '曲が見つかりません' : 'まだ曲がありません'}</h3><p>${term ? '別のキーワードで検索してください。' : '音楽ファイルを追加すると、ここに表示されます。<br>MP3 / WAV / M4A などの音声ファイルに対応。'}</p>${term ? '' : `<button class="primary-btn" id="emptyUploadBtn" type="button">${icons('plus')}曲を追加する</button>`}</div>`;
+      $('trackList').innerHTML = `<div class="empty"><div class="empty-graphic">${icons(term ? 'search' : 'music')}</div><h3>${term ? 'ファイルが見つかりません' : 'まだファイルがありません'}</h3><p>${term ? '別のキーワードで検索してください。' : '音楽・動画ファイルを追加すると、ここに表示されます。<br>MP3 / WAV / M4A / MP4 / WebM などに対応。'}</p>${term ? '' : `<button class="primary-btn" id="emptyUploadBtn" type="button">${icons('plus')}ファイルを追加する</button>`}</div>`;
       $('emptyUploadBtn')?.addEventListener('click', () => $('fileInput').click());
       updateTransport();
       return;
@@ -277,14 +304,14 @@
       const t = tracks.get(id);
       const idx = ids.indexOf(id);
       const active = id === activeTrackId;
-      return `<div class="track-row ${active ? 'is-active' : ''}" data-track="${safeText(id)}" draggable="${!term}"><div class="track-num">${active && !audio.paused ? '♫' : idx + 1}</div><button type="button" class="track-info-button" data-action="play" title="${safeText(t.name)} を再生"><div class="track-thumb">${icons(active && !audio.paused ? 'pause' : 'music')}</div><div class="track-copy"><div class="track-name">${safeText(t.name)}</div><div class="track-sub">${safeText(t.format)} · ローカル音楽</div></div></button><span class="track-size">${formatSize(t.size)}</span><div class="track-tools"><button type="button" data-action="up" class="icon-btn" aria-label="${safeText(t.name)} を上へ" title="上へ移動" ${idx===0||term?'disabled':''}>${icons('up')}</button><button type="button" data-action="down" class="icon-btn" aria-label="${safeText(t.name)} を下へ" title="下へ移動" ${idx===ids.length-1||term?'disabled':''}>${icons('down')}</button><button type="button" data-action="remove" class="icon-btn remove" aria-label="${safeText(t.name)} を削除" title="リストから削除">${icons('trash')}</button></div></div>`;
+      return `<div class="track-row ${active ? 'is-active' : ''}" data-track="${safeText(id)}" draggable="${!term}"><div class="track-num">${active && !media.paused ? '♫' : idx + 1}</div><button type="button" class="track-info-button" data-action="play" title="${safeText(t.name)} を再生"><div class="track-thumb">${icons(active && !media.paused ? 'pause' : (isVideoTrack(t) ? 'video' : 'music'))}</div><div class="track-copy"><div class="track-name">${safeText(t.name)}</div><div class="track-sub">${t.note ? `${safeText(t.note)} · ` : ''}${safeText(t.format)} · ${isVideoTrack(t) ? '動画' : '音楽'}</div></div></button><span class="track-size">${formatSize(t.size)}</span><div class="track-tools"><button type="button" data-action="edit" class="icon-btn" aria-label="${safeText(t.name)} の名前とメモを編集" title="名前・メモを編集">${icons('edit')}</button><button type="button" data-action="up" class="icon-btn" aria-label="${safeText(t.name)} を上へ" title="上へ移動" ${idx===0||term?'disabled':''}>${icons('up')}</button><button type="button" data-action="down" class="icon-btn" aria-label="${safeText(t.name)} を下へ" title="下へ移動" ${idx===ids.length-1||term?'disabled':''}>${icons('down')}</button><button type="button" data-action="remove" class="icon-btn remove" aria-label="${safeText(t.name)} を削除" title="リストから削除">${icons('trash')}</button></div></div>`;
     }).join('');
     updateTransport();
   }
   function updateTransport() {
     const hasTracks = !!currentPlaylist()?.trackIds.length;
     for (const id of ['playBtn','previousBtn','nextBtn','shuffleBtn','repeatBtn']) $(id).disabled = !hasTracks;
-    const playing = !audio.paused && !!audio.src;
+    const playing = !media.paused && !!media.src;
     $('playIcon').setAttribute('href', playing ? '#i-pause' : '#i-play');
     $('playBtn').title = playing ? '一時停止' : '再生';
     $('playBtn').setAttribute('aria-label',playing ? '一時停止' : '再生');
@@ -297,38 +324,46 @@
     $('repeatBtn').setAttribute('aria-label',`リピートモード: ${repeatNames[repeat]}`);
     $('repeatOneIndicator').hidden = repeat !== 'one';
     const t = tracks.get(activeTrackId);
-    $('nowTitle').textContent = t?.name ?? '曲が選択されていません';
-    $('nowSubtitle').textContent = t ? `${t.format} · ${currentPlaylist()?.name || 'マイミュージック'}` : 'ファイルを追加して再生しよう';
+    $('nowArtIcon').setAttribute('href', t && isVideoTrack(t) ? '#i-video' : '#i-music');
+    $('nowTitle').textContent = t?.name ?? 'ファイルが選択されていません';
+    $('nowSubtitle').textContent = t ? `${t.note ? `${t.note} · ` : ''}${t.format} · ${currentPlaylist()?.name || 'マイミュージック'}` : '音楽や動画を追加して再生しよう';
   }
-  function releaseAudio() {
-    audio.pause();
-    audio.removeAttribute('src');
-    audio.load();
+  function releaseMedia() {
+    for (const element of [audio, video]) {
+      element.pause();
+      element.removeAttribute('src');
+      element.load();
+    }
     if (objectUrl) URL.revokeObjectURL(objectUrl);
     objectUrl = null;
     $('currentTime').textContent = '0:00';
     $('durationTime').textContent = '0:00';
     $('seekBar').value = 0;
+    $('videoStage').hidden = true;
   }
   function loadTrack(id) {
     const t = tracks.get(id);
     if (!t) return false;
-    releaseAudio();
+    releaseMedia();
     activeTrackId = id;
+    media = isVideoTrack(t) ? video : audio;
+    $('videoStage').hidden = media !== video;
+    media.volume = Number($('volumeBar').value) / 100;
     objectUrl = URL.createObjectURL(t.blob);
-    audio.src = objectUrl;
-    audio.playbackRate = speeds[speedIndex];
-    audio.load();
+    media.src = objectUrl;
+    media.playbackRate = speeds[speedIndex];
+    media.load();
     updateTransport();
     listRender();
     return true;
   }
   async function playTrack(id, autoPlay = true) {
     if (!tracks.has(id)) return;
-    if (activeTrackId !== id || !audio.src) loadTrack(id);
+    if (activeTrackId !== id || !media.src) loadTrack(id);
     if (!autoPlay) return;
-    try { await audio.play(); }
-    catch (e) { notify('再生できませんでした。対応する音声形式かご確認ください。',true); }
+    if (media === video) $('videoStage').scrollIntoView({behavior:'smooth',block:'nearest'});
+    try { await media.play(); }
+    catch (e) { notify('再生できませんでした。ブラウザが対応する音声・動画形式かご確認ください。',true); }
   }
   async function activatePlaylist(id) {
     if (!playlists.some(p => p.id === id)) return;
@@ -336,7 +371,7 @@
     $('searchTracks').value = '';
     await setSetting('activePlaylistId',id);
     const first = currentPlaylist()?.trackIds.find(trackId => tracks.has(trackId));
-    if (first) loadTrack(first); else { releaseAudio(); activeTrackId = null; }
+    if (first) loadTrack(first); else { releaseMedia(); activeTrackId = null; }
     navRender();
     listRender();
     updateTransport();
@@ -359,7 +394,7 @@
       if (!playlists.some(p => p.trackIds.includes(id))) { await del('tracks',id); tracks.delete(id); }
       if (activeTrackId === id) {
         const next = playlist.trackIds.find(tid => tracks.has(tid));
-        if (next) loadTrack(next); else { releaseAudio(); activeTrackId = null; }
+        if (next) loadTrack(next); else { releaseMedia(); activeTrackId = null; }
       }
       navRender(); listRender(); notify('プレイリストから削除しました');
     } catch(e) { notify('削除に失敗しました',true); }
@@ -367,15 +402,16 @@
   async function importFiles(files) {
     const target = currentPlaylist();
     if (!target || !files?.length) return;
-    const valid = [...files].filter(file => file.type.startsWith('audio/') || /\.(mp3|wav|m4a|ogg|opus|flac|aac|weba)$/i.test(file.name));
-    if (!valid.length) { notify('音楽ファイルを選んでください',true); return; }
+    const valid = [...files].filter(file => file.type.startsWith('audio/') || file.type.startsWith('video/') || /\.(mp3|wav|m4a|ogg|opus|flac|aac|weba|mp4|m4v|webm|mov|ogv)$/i.test(file.name));
+    if (!valid.length) { notify('音楽・動画ファイルを選んでください',true); return; }
     $('uploadTopBtn').disabled = true;
     let count = 0;
     for (const file of valid) {
       try {
         const name = file.name.replace(/\.[^.]+$/,'');
         const format = (file.name.split('.').pop() || 'AUDIO').toUpperCase();
-        const rec = {id:genId(),name,size:file.size,format,blob:file,lastModified:file.lastModified};
+        const kind = file.type.startsWith('video/') || /\.(mp4|m4v|webm|mov|ogv)$/i.test(file.name) ? 'video' : 'audio';
+        const rec = {id:genId(),name,note:'',originalName:file.name,size:file.size,format,kind,blob:file,lastModified:file.lastModified};
         await put('tracks',rec);
         tracks.set(rec.id,rec);
         target.trackIds.push(rec.id);
@@ -390,16 +426,16 @@
     $('uploadTopBtn').disabled = false;
     if (activePlaylistId === target.id && !activeTrackId && count) loadTrack(target.trackIds[0]);
     navRender(); listRender();
-    if (count) notify(`${count} 曲をプレイリストに追加しました！`);
-    if (valid.length !== files.length) notify(`${count} 曲を追加しました（音声以外のファイルは除外）`);
+    if (count) notify(`${count} ファイルをプレイリストに追加しました！`);
+    if (valid.length !== files.length) notify(`${count} ファイルを追加しました（音声・動画以外は除外）`);
   }
   function nextSong(isAuto = false) {
     const ids = currentPlaylist()?.trackIds.filter(id => tracks.has(id)) || [];
     if (!ids.length) return;
-    if (isAuto && repeat === 'one') { audio.currentTime = 0; audio.play().catch(()=>{}); return; }
+    if (isAuto && repeat === 'one') { media.currentTime = 0; media.play().catch(()=>{}); return; }
     const i = ids.indexOf(activeTrackId);
     if (isAuto && !shuffle && repeat === 'off' && i === ids.length - 1) {
-      audio.pause(); audio.currentTime = 0; updateTransport(); listRender(); return;
+      media.pause(); media.currentTime = 0; updateTransport(); listRender(); return;
     }
     let next;
     if (shuffle && ids.length > 1) {
@@ -413,10 +449,43 @@
   function previousSong() {
     const ids = currentPlaylist()?.trackIds.filter(id => tracks.has(id)) || [];
     if (!ids.length) return;
-    if (audio.currentTime > 3) { audio.currentTime = 0; return; }
+    if (media.currentTime > 3) { media.currentTime = 0; return; }
     const i = ids.indexOf(activeTrackId);
     const prev = shuffle && ids.length > 1 ? ids.filter(id => id !== activeTrackId)[Math.floor(Math.random() * (ids.length-1))] : ids[(i-1+ids.length)%ids.length];
     playTrack(prev);
+  }
+  function openTrackDialog(id) {
+    const t = tracks.get(id);
+    if (!t) return;
+    editingTrackId = id;
+    $('trackNameInput').value = t.name;
+    $('trackMemoInput').value = t.note || '';
+    $('trackOriginalName').textContent = t.originalName ? `元のファイル名：${t.originalName}` : '以前に追加したファイルも名前を変更できます。';
+    $('trackDialog').showModal();
+    $('trackNameInput').focus();
+    $('trackNameInput').select();
+  }
+  async function saveTrackDialog(event) {
+    event.preventDefault();
+    const t = tracks.get(editingTrackId);
+    const name = $('trackNameInput').value.trim();
+    if (!t || !name) return;
+    const updated = {...t, name, note:$('trackMemoInput').value.trim()};
+    $('saveTrackBtn').disabled = true;
+    try {
+      await put('tracks', updated);
+      tracks.set(updated.id, updated);
+      $('trackDialog').close();
+      editingTrackId = null;
+      listRender();
+      updateTransport();
+      notify('曲・動画の名前とメモを保存しました');
+    } catch (e) {
+      console.error(e);
+      notify('名前の保存に失敗しました。保存領域をご確認ください。',true);
+    } finally {
+      $('saveTrackBtn').disabled = false;
+    }
   }
   function openDialog(mode) {
     dialogMode = mode;
@@ -467,6 +536,9 @@
     $('deletePlaylistBtn').addEventListener('click',deletePlaylist);
     $('cancelDialogBtn').addEventListener('click',()=>$('playlistDialog').close());
     $('playlistForm').addEventListener('submit',saveDialog);
+    $('cancelTrackDialogBtn').addEventListener('click',()=>$('trackDialog').close());
+    $('trackForm').addEventListener('submit',saveTrackDialog);
+    $('trackDialog').addEventListener('close',()=>{ editingTrackId = null; });
     $('uploadTopBtn').addEventListener('click',()=>$('fileInput').click());
     $('fileInput').addEventListener('change',async e => { await importFiles(e.target.files); e.target.value = ''; });
     $('dropZone').addEventListener('click',()=>$('fileInput').click());
@@ -481,7 +553,8 @@
       if (!btn || !row) return;
       const id = row.dataset.track;
       const action = btn.dataset.action;
-      if (action === 'play') { if (activeTrackId === id && !audio.paused) audio.pause(); else playTrack(id); }
+      if (action === 'play') { if (activeTrackId === id && !media.paused) media.pause(); else playTrack(id); }
+      if (action === 'edit') openTrackDialog(id);
       if (action === 'up') moveIndex(id,currentPlaylist().trackIds.indexOf(id)-1);
       if (action === 'down') moveIndex(id,currentPlaylist().trackIds.indexOf(id)+1);
       if (action === 'remove') removeSong(id);
@@ -510,27 +583,35 @@
     $('trackList').addEventListener('dragend',() => { dragTrackId = null; document.querySelectorAll('.track-row.drag-over').forEach(el=>el.classList.remove('drag-over')); });
     $('playBtn').addEventListener('click',() => {
       if (!currentPlaylist()?.trackIds.length) return;
-      if (!audio.paused) audio.pause();
+      if (!media.paused) media.pause();
       else playTrack(activeTrackId && currentPlaylist().trackIds.includes(activeTrackId) ? activeTrackId : currentPlaylist().trackIds[0]);
     });
     $('nextBtn').addEventListener('click',()=>nextSong(false));
     $('previousBtn').addEventListener('click',previousSong);
     $('shuffleBtn').addEventListener('click',() => { shuffle = !shuffle; updateTransport(); notify(shuffle ? 'シャッフル再生オン' : 'シャッフル再生オフ'); });
     $('repeatBtn').addEventListener('click',() => { repeat = {all:'one',one:'off',off:'all'}[repeat]; updateTransport(); notify({all:'全曲リピート',one:'1曲リピート',off:'リピートなし'}[repeat]); });
-    $('speedBtn').addEventListener('click',() => { speedIndex = (speedIndex+1)%speeds.length; audio.playbackRate = speeds[speedIndex]; $('speedBtn').textContent = `${speeds[speedIndex].toFixed(2).replace(/0$/,'')}×`; });
-    $('volumeBar').addEventListener('input',e => { audio.volume = Number(e.target.value)/100; });
+    $('speedBtn').addEventListener('click',() => { speedIndex = (speedIndex+1)%speeds.length; media.playbackRate = speeds[speedIndex]; $('speedBtn').textContent = `${speeds[speedIndex].toFixed(2).replace(/0$/,'')}×`; });
+    $('volumeBar').addEventListener('input',e => { media.volume = Number(e.target.value)/100; });
     $('seekBar').addEventListener('pointerdown',() => { seekActive = true; });
     $('seekBar').addEventListener('pointerup',() => { seekActive = false; });
-    $('seekBar').addEventListener('input',e => { if (Number.isFinite(audio.duration)) $('currentTime').textContent = formatTime(audio.duration * Number(e.target.value)/1000); });
-    $('seekBar').addEventListener('change',e => { if (Number.isFinite(audio.duration)) audio.currentTime = audio.duration * Number(e.target.value)/1000; seekActive = false; });
-    audio.addEventListener('loadedmetadata',() => { $('durationTime').textContent = formatTime(audio.duration); });
-    audio.addEventListener('durationchange',() => { $('durationTime').textContent = formatTime(audio.duration); });
-    audio.addEventListener('timeupdate',() => { if (!seekActive) { $('currentTime').textContent = formatTime(audio.currentTime); $('seekBar').value = Number.isFinite(audio.duration) && audio.duration > 0 ? String(Math.round(audio.currentTime/audio.duration*1000)) : 0; } });
-    audio.addEventListener('ended',() => nextSong(true));
-    audio.addEventListener('play',() => { updateTransport(); listRender(); });
-    audio.addEventListener('pause',() => { updateTransport(); listRender(); });
-    audio.addEventListener('error',() => { if (audio.src) notify('この音声形式はブラウザで再生できない可能性があります。',true); });
-    document.addEventListener('keydown',e => { if (e.code === 'Space' && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLButtonElement) && !$('playlistDialog').open) { e.preventDefault(); $('playBtn').click(); } });
+    $('seekBar').addEventListener('input',e => { if (Number.isFinite(media.duration)) $('currentTime').textContent = formatTime(media.duration * Number(e.target.value)/1000); });
+    $('seekBar').addEventListener('change',e => { if (Number.isFinite(media.duration)) media.currentTime = media.duration * Number(e.target.value)/1000; seekActive = false; });
+    for (const element of [audio, video]) {
+      element.addEventListener('loadedmetadata',() => { if (element === media) $('durationTime').textContent = formatTime(media.duration); });
+      element.addEventListener('durationchange',() => { if (element === media) $('durationTime').textContent = formatTime(media.duration); });
+      element.addEventListener('timeupdate',() => {
+        if (element === media && !seekActive) {
+          $('currentTime').textContent = formatTime(media.currentTime);
+          $('seekBar').value = Number.isFinite(media.duration) && media.duration > 0 ? String(Math.round(media.currentTime/media.duration*1000)) : 0;
+        }
+      });
+      element.addEventListener('ended',() => { if (element === media) nextSong(true); });
+      element.addEventListener('play',() => { if (element === media) { updateTransport(); listRender(); } });
+      element.addEventListener('pause',() => { if (element === media) { updateTransport(); listRender(); } });
+      element.addEventListener('volumechange',() => { if (element === media) $('volumeBar').value = String(Math.round(media.muted ? 0 : media.volume*100)); });
+      element.addEventListener('error',() => { if (element === media && media.getAttribute('src')) notify('この形式・コーデックはブラウザで再生できない可能性があります。',true); });
+    }
+    document.addEventListener('keydown',e => { if (e.code === 'Space' && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLButtonElement) && !$('playlistDialog').open && !$('trackDialog').open) { e.preventDefault(); $('playBtn').click(); } });
     window.addEventListener('beforeunload',() => { if (objectUrl) URL.revokeObjectURL(objectUrl); });
   }
   async function init() {
