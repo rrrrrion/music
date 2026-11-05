@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b101b">
-  <meta name="description" content="音楽・MP4動画をブラウザに保存して、プレイリスト・リピート再生を楽しめる無料プレイヤー。">
+  <meta name="description" content="音楽・MP4動画をブラウザに保存して、プレイリスト・リピート再生・スマホのバックグラウンド再生を楽しめる無料プレイヤー。">
   <title>Looply — 音楽・動画プレイヤー</title>
   <style>
     :root { color-scheme: dark; --bg:#090e18; --panel:#101827; --panel-2:#172235; --panel-3:#1b2940; --muted:#9ba9c2; --text:#f1f6ff; --line:#263247; --accent:#bcfc82; --accent-dark:#1c3220; --danger:#ff8d9a; --shadow:0 12px 44px #0004; }
@@ -58,6 +58,13 @@
     .search-area > .icon { position:absolute; left:16px; top:50%; transform:translateY(-50%); color:#8d9cb4; }
     .search-area input { background:#111c2c; border:1px solid #26364a; border-radius:12px; width:100%; color:var(--text); padding:13px 14px 13px 46px; font-size:13px; }
     .search-area input::placeholder { color:#7789a4; }
+    .background-settings { display:flex; align-items:center; justify-content:space-between; gap:16px; margin:0 0 27px; padding:18px 20px; border:1px solid #3b4d57; border-radius:15px; background:linear-gradient(120deg,#162b31,#152132); }
+    .background-settings strong { font-size:14px; color:#e4f6ff; }
+    .background-settings p { margin:7px 0 0; color:#a6bace; font-size:11px; line-height:1.65; }
+    .audio-only-toggle { background:#22384b; color:#d1e2f4; border:1px solid #4c657d; border-radius:10px; padding:12px 15px; font-size:12px; font-weight:850; white-space:nowrap; min-width:170px; }
+    .audio-only-toggle[aria-pressed="true"] { background:#bdf392; color:#20321d; border-color:#bdf392; }
+    .audio-only-toggle:focus-visible { outline:2px solid #bdf392; outline-offset:3px; }
+    @media(max-width:720px) { .background-settings { align-items:flex-start; flex-direction:column; gap:11px; padding:14px; } .audio-only-toggle { width:100%; } }
     .video-stage { margin:0 0 30px; border:1px solid #314d48; background:#111b29; border-radius:18px; overflow:hidden; box-shadow:var(--shadow); }
     .video-stage[hidden] { display:none; }
     .video-heading { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; padding:14px 18px; }
@@ -199,6 +206,10 @@
   <main class="main">
     <div class="topbar"><div><div class="eyebrow">YOUR MUSIC, YOUR WAY</div><div class="label" style="margin-top:7px">好きな音楽も動画も、好きなだけ。</div></div><button type="button" id="uploadTopBtn" class="primary-btn"><svg class="icon"><use href="#i-upload"/></svg>ファイルを追加</button></div>
     <section class="hero"><div class="hero-content"><div class="hero-tag">♪ NEVER STOP THE MUSIC</div><h1>好きな音楽も動画も、<br>ずっとリピート。</h1><p>MP3・MP4などの手持ちのファイルでプレイリストを作成。音楽も動画もリピート・シャッフルで楽しもう。</p></div><div class="hero-vinyl" aria-hidden="true"><div class="vinyl-sticker">LOOPLY</div></div></section>
+    <section class="background-settings" aria-label="スマホのバックグラウンド再生設定">
+      <div><strong>スマホのバックグラウンド再生</strong><p>音楽はそのまま再生。MP4の音声を別アプリでも聴きたいときは「動画の音声だけ」をONにしてください。ロック画面の操作は端末・ブラウザの対応状況によります。</p></div>
+      <button type="button" id="audioOnlyBtn" class="audio-only-toggle" aria-pressed="false">動画の音声だけ：OFF</button>
+    </section>
     <section id="videoStage" class="video-stage" aria-label="動画再生画面" hidden><div class="video-heading"><strong>NOW WATCHING · 動画プレイヤー</strong><span>動画内のボタンで全画面表示もできます</span></div><video id="videoScreen" controls playsinline preload="metadata" aria-label="選択中の動画"></video></section>
     <section aria-label="音楽・動画ファイルリスト">
       <div class="section-title-row"><div><h2 id="playlistTitle" class="playlist-title">お気に入り</h2><p id="playlistCaption" class="playlist-desc">0 ファイルのプレイリスト</p></div><div class="section-actions"><button id="renamePlaylistBtn" type="button" class="small-action" title="名前を変更" aria-label="プレイリスト名を変更"><svg class="icon"><use href="#i-edit"/></svg></button><button id="deletePlaylistBtn" type="button" class="small-action danger" title="プレイリストを削除" aria-label="プレイリストを削除"><svg class="icon"><use href="#i-trash"/></svg></button></div></div>
@@ -255,6 +266,8 @@
   let dialogMode = 'new';
   let editingTrackId = null;
   let backupBusy = false;
+  let audioOnlyMode = false;
+  let lastPositionSync = -1;
 
   const safeText = s => String(s ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
   const formatSize = n => n >= 1024 * 1024 ? `${(n / 1048576).toFixed(1)} MB` : `${(n / 1024).toFixed(0)} KB`;
@@ -550,6 +563,79 @@
     }).join('');
     updateTransport();
   }
+  // Android や iOS の対応ブラウザで、ロック画面・イヤホンの再生ボタンと連携。
+  function setMediaMetadata() {
+    if (!('mediaSession' in navigator) || !('MediaMetadata' in window)) return;
+    const t = tracks.get(activeTrackId);
+    try {
+      navigator.mediaSession.metadata = t ? new MediaMetadata({
+        title: t.name || '無題のファイル',
+        artist: t.note || (isVideoTrack(t) ? '動画' : '音楽'),
+        album: currentPlaylist()?.name || 'Looply'
+      }) : null;
+    } catch (error) { console.debug('Media Session metadata unavailable:',error); }
+  }
+  function setMediaPlaybackState() {
+    if (!('mediaSession' in navigator)) return;
+    try { navigator.mediaSession.playbackState = activeTrackId && media.src ? (!media.paused ? 'playing' : 'paused') : 'none'; }
+    catch (error) { console.debug('Media Session state unavailable:',error); }
+  }
+  function updateMediaPosition(force = false) {
+    if (!('mediaSession' in navigator) || typeof navigator.mediaSession.setPositionState !== 'function') return;
+    if (!media.src || !Number.isFinite(media.duration) || media.duration <= 0) return;
+    const second = Math.floor(media.currentTime);
+    if (!force && second === lastPositionSync) return;
+    lastPositionSync = second;
+    try { navigator.mediaSession.setPositionState({duration: media.duration, playbackRate: media.playbackRate, position: Math.min(media.currentTime,media.duration)}); }
+    catch (error) { console.debug('Media Session position unavailable:',error); }
+  }
+  function configureMediaSession() {
+    if (!('mediaSession' in navigator)) return;
+    const handlers = {
+      play: () => { if (activeTrackId) playTrack(activeTrackId); },
+      pause: () => media.pause(),
+      stop: () => { media.pause(); try { media.currentTime = 0; } catch (_) {} },
+      previoustrack: () => previousSong(),
+      nexttrack: () => nextSong(false),
+      seekbackward: event => { if (media.src) media.currentTime = Math.max(0,media.currentTime-(event.seekOffset||10)); },
+      seekforward: event => { if (media.src && Number.isFinite(media.duration)) media.currentTime = Math.min(media.duration,media.currentTime+(event.seekOffset||10)); },
+      seekto: event => { if (media.src && Number.isFinite(event.seekTime)) media.currentTime = Math.max(0,Math.min(media.duration,event.seekTime)); }
+    };
+    for (const [action,handler] of Object.entries(handlers)) {
+      try { navigator.mediaSession.setActionHandler(action,handler); }
+      catch (_) { /* 非対応アクションは省略 */ }
+    }
+  }
+  function renderAudioOnlyMode() {
+    $('audioOnlyBtn').setAttribute('aria-pressed',String(audioOnlyMode));
+    $('audioOnlyBtn').textContent = `動画の音声だけ：${audioOnlyMode ? 'ON' : 'OFF'}`;
+    $('audioOnlyBtn').title = audioOnlyMode ? '動画の映像も表示する' : 'MP4を音声として再生する';
+  }
+  function toggleAudioOnlyMode() {
+    const t = tracks.get(activeTrackId);
+    const wasPlaying = !!media.src && !media.paused;
+    const resumeTime = Number.isFinite(media.currentTime) ? media.currentTime : 0;
+    audioOnlyMode = !audioOnlyMode;
+    renderAudioOnlyMode();
+    setSetting('audioOnlyMode',audioOnlyMode).catch(() => notify('音声モードの保存に失敗しました',true));
+    if (t && isVideoTrack(t)) {
+      // ユーザーのタップ操作中に再生開始。再生位置はメタデータ取得後に復元。
+      loadTrack(t.id);
+      const nextMedia = media;
+      if (resumeTime > 0) {
+        const restoreTime = () => {
+          try { nextMedia.currentTime = Math.min(resumeTime,Number.isFinite(nextMedia.duration) ? nextMedia.duration : resumeTime); }
+          catch (_) { /* 再生位置を復元できないブラウザ */ }
+        };
+        nextMedia.addEventListener('loadedmetadata',restoreTime,{once:true});
+        restoreTime();
+      }
+      if (wasPlaying) {
+        nextMedia.play().catch(() => notify('このMP4は音声のみ再生に対応しない可能性があります。M4Aなどの音声ファイルをお試しください。',true));
+      }
+    }
+    notify(audioOnlyMode ? '音声のみモードON：MP4は映像を表示せず音声で再生します' : '音声のみモードOFF：MP4は映像を表示します');
+  }
   function updateTransport() {
     const hasTracks = !!currentPlaylist()?.trackIds.length;
     for (const id of ['playBtn','previousBtn','nextBtn','shuffleBtn','repeatBtn']) $(id).disabled = !hasTracks;
@@ -565,10 +651,11 @@
     $('repeatBtn').title = repeatNames[repeat];
     $('repeatBtn').setAttribute('aria-label',`リピートモード: ${repeatNames[repeat]}`);
     $('repeatOneIndicator').hidden = repeat !== 'one';
+    setMediaPlaybackState();
     const t = tracks.get(activeTrackId);
     $('nowArtIcon').setAttribute('href', t && isVideoTrack(t) ? '#i-video' : '#i-music');
     $('nowTitle').textContent = t?.name ?? 'ファイルが選択されていません';
-    $('nowSubtitle').textContent = t ? `${t.note ? `${t.note} · ` : ''}${t.format} · ${currentPlaylist()?.name || 'マイミュージック'}` : '音楽や動画を追加して再生しよう';
+    $('nowSubtitle').textContent = t ? `${t.note ? `${t.note} · ` : ''}${t.format}${isVideoTrack(t) && audioOnlyMode ? ' · 音声のみ' : ''} · ${currentPlaylist()?.name || 'マイミュージック'}` : '音楽や動画を追加して再生しよう';
   }
   function releaseMedia() {
     for (const element of [audio, video]) {
@@ -582,18 +669,23 @@
     $('durationTime').textContent = '0:00';
     $('seekBar').value = 0;
     $('videoStage').hidden = true;
+    lastPositionSync = -1;
+    setMediaPlaybackState();
   }
   function loadTrack(id) {
     const t = tracks.get(id);
     if (!t) return false;
     releaseMedia();
     activeTrackId = id;
-    media = isVideoTrack(t) ? video : audio;
+    media = isVideoTrack(t) && !audioOnlyMode ? video : audio;
     $('videoStage').hidden = media !== video;
     media.volume = Number($('volumeBar').value) / 100;
     objectUrl = URL.createObjectURL(t.blob);
     media.src = objectUrl;
     media.playbackRate = speeds[speedIndex];
+    media.loop = repeat === 'one'; // 1曲リピートはブラウザ標準のループ機能を使う
+    lastPositionSync = -1;
+    setMediaMetadata();
     media.load();
     updateTransport();
     listRender();
@@ -603,7 +695,7 @@
     if (!tracks.has(id)) return;
     if (activeTrackId !== id || !media.src) loadTrack(id);
     if (!autoPlay) return;
-    if (media === video) $('videoStage').scrollIntoView({behavior:'smooth',block:'nearest'});
+    if (media === video && !document.hidden) $('videoStage').scrollIntoView({behavior:'smooth',block:'nearest'});
     try { await media.play(); }
     catch (e) { notify('再生できませんでした。ブラウザが対応する音声・動画形式かご確認ください。',true); }
   }
@@ -722,6 +814,7 @@
       editingTrackId = null;
       listRender();
       updateTransport();
+      if (updated.id === activeTrackId) setMediaMetadata();
       notify('曲・動画の名前とメモを保存しました');
     } catch (e) {
       console.error(e);
@@ -774,6 +867,8 @@
     } catch(e) { notify('削除に失敗しました',true); }
   }
   function bindEvents() {
+    configureMediaSession();
+    $('audioOnlyBtn').addEventListener('click',toggleAudioOnlyMode);
     $('persistBtn').addEventListener('click',enablePersistentStorage);
     $('downloadBackupBtn').addEventListener('click',downloadBackup);
     $('restoreBackupBtn').addEventListener('click',()=>$('backupFileInput').click());
@@ -836,25 +931,26 @@
     $('nextBtn').addEventListener('click',()=>nextSong(false));
     $('previousBtn').addEventListener('click',previousSong);
     $('shuffleBtn').addEventListener('click',() => { shuffle = !shuffle; updateTransport(); notify(shuffle ? 'シャッフル再生オン' : 'シャッフル再生オフ'); });
-    $('repeatBtn').addEventListener('click',() => { repeat = {all:'one',one:'off',off:'all'}[repeat]; updateTransport(); notify({all:'全曲リピート',one:'1曲リピート',off:'リピートなし'}[repeat]); });
-    $('speedBtn').addEventListener('click',() => { speedIndex = (speedIndex+1)%speeds.length; media.playbackRate = speeds[speedIndex]; $('speedBtn').textContent = `${speeds[speedIndex].toFixed(2).replace(/0$/,'')}×`; });
+    $('repeatBtn').addEventListener('click',() => { repeat = {all:'one',one:'off',off:'all'}[repeat]; audio.loop = video.loop = repeat === 'one'; updateTransport(); notify({all:'全曲リピート',one:'1曲リピート',off:'リピートなし'}[repeat]); });
+    $('speedBtn').addEventListener('click',() => { speedIndex = (speedIndex+1)%speeds.length; media.playbackRate = speeds[speedIndex]; updateMediaPosition(true); $('speedBtn').textContent = `${speeds[speedIndex].toFixed(2).replace(/0$/,'')}×`; });
     $('volumeBar').addEventListener('input',e => { media.volume = Number(e.target.value)/100; });
     $('seekBar').addEventListener('pointerdown',() => { seekActive = true; });
     $('seekBar').addEventListener('pointerup',() => { seekActive = false; });
     $('seekBar').addEventListener('input',e => { if (Number.isFinite(media.duration)) $('currentTime').textContent = formatTime(media.duration * Number(e.target.value)/1000); });
-    $('seekBar').addEventListener('change',e => { if (Number.isFinite(media.duration)) media.currentTime = media.duration * Number(e.target.value)/1000; seekActive = false; });
+    $('seekBar').addEventListener('change',e => { if (Number.isFinite(media.duration)) media.currentTime = media.duration * Number(e.target.value)/1000; seekActive = false; updateMediaPosition(true); });
     for (const element of [audio, video]) {
-      element.addEventListener('loadedmetadata',() => { if (element === media) $('durationTime').textContent = formatTime(media.duration); });
+      element.addEventListener('loadedmetadata',() => { if (element === media) { $('durationTime').textContent = formatTime(media.duration); updateMediaPosition(true); } });
       element.addEventListener('durationchange',() => { if (element === media) $('durationTime').textContent = formatTime(media.duration); });
       element.addEventListener('timeupdate',() => {
         if (element === media && !seekActive) {
           $('currentTime').textContent = formatTime(media.currentTime);
           $('seekBar').value = Number.isFinite(media.duration) && media.duration > 0 ? String(Math.round(media.currentTime/media.duration*1000)) : 0;
         }
+        if (element === media) updateMediaPosition();
       });
       element.addEventListener('ended',() => { if (element === media) nextSong(true); });
-      element.addEventListener('play',() => { if (element === media) { updateTransport(); listRender(); } });
-      element.addEventListener('pause',() => { if (element === media) { updateTransport(); listRender(); } });
+      element.addEventListener('play',() => { if (element === media) { updateTransport(); listRender(); updateMediaPosition(true); } });
+      element.addEventListener('pause',() => { if (element === media) { updateTransport(); listRender(); updateMediaPosition(true); } });
       element.addEventListener('volumechange',() => { if (element === media) $('volumeBar').value = String(Math.round(media.muted ? 0 : media.volume*100)); });
       element.addEventListener('error',() => { if (element === media && media.getAttribute('src')) notify('この形式・コーデックはブラウザで再生できない可能性があります。',true); });
     }
@@ -873,6 +969,8 @@
         await put('playlists',starter);
         playlists = [starter];
       }
+      audioOnlyMode = !!getSetting(settings,'audioOnlyMode',false);
+      renderAudioOnlyMode();
       const storedId = getSetting(settings,'activePlaylistId',playlists[0].id);
       await activatePlaylist(playlists.some(p=>p.id===storedId) ? storedId : playlists[0].id);
       updateTransport();
