@@ -6,6 +6,11 @@
   <meta name="theme-color" content="#0b101b">
   <meta name="description" content="音楽・MP4動画をブラウザに保存して、プレイリスト・リピート再生・スマホのバックグラウンド再生を楽しめる無料プレイヤー。">
   <title>Looply — 音楽・動画プレイヤー</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Looply">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <style>
     :root { color-scheme: dark; --bg:#090e18; --panel:#101827; --panel-2:#172235; --panel-3:#1b2940; --muted:#9ba9c2; --text:#f1f6ff; --line:#263247; --accent:#bcfc82; --accent-dark:#1c3220; --danger:#ff8d9a; --shadow:0 12px 44px #0004; }
     * { box-sizing:border-box; }
@@ -984,6 +989,15 @@
   }
   init();
 })();
+</script>
+<script>
+// GitHub Pages / HTTPS でのみ使用。登録に失敗しても通常のプレイヤーは動きます。
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js', {scope:'./'})
+      .catch(error => console.warn('オフライン機能は利用できません:', error));
+  });
+}
 </script>
 </body>
 </html>
